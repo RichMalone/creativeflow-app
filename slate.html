@@ -615,6 +615,19 @@
     font-size: 12px; font-weight: 800; letter-spacing: 0.3px;
   }
   .founder-badge[hidden] { display: none; }
+  .account-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .account-badges[hidden] { display: none; }
+  .og-badge {
+    display: inline-flex; align-items: center;
+    margin: 4px 0 2px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #0A0712;
+    border: 1.5px solid #34D5C7;
+    color: #34D5C7;
+    font-size: 12px; font-weight: 900; letter-spacing: 1px;
+  }
+  .badge-img { height: 24px; width: auto; margin: 4px 0 2px; }
 
   /* ---------- Customize (Settings) ---------- */
   .brand-name {
@@ -828,7 +841,7 @@
   .format-toggle {
     display: flex;
     gap: 8px;
-    margin: 12px 0 4px;
+    margin: 12px 0 20px;
   }
   .format-option {
     flex: 1;
@@ -2121,24 +2134,34 @@
   }
 
   /* ---------- A4 document canvas ---------- */
+  /* The script writer is exactly one window tall, so only the pages scroll and the toolbar stays put. */
+  #screen-write { flex: none; height: 100vh; height: 100dvh; }
   .doc-canvas {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 20px 14px calc(40px + var(--safe-bottom));
     display: flex;
     flex-direction: column;
     align-items: center;
   }
+  /* Separate A4 sheets, like Google Docs: one element painted as a stack of pages with gaps
+     (--page-h and --page-gap are set by paginateScript), and text that would cross the bottom
+     of a page is moved to the top of the next one. */
   .doc-page {
+    --page-h: 877px;
+    --page-gap: 18px;
     flex-shrink: 0;
     width: 100%;
     max-width: 620px;
-    aspect-ratio: 210 / 297;
+    min-height: var(--page-h);
     box-sizing: border-box;
-    background: #FDFDFB;
+    background: repeating-linear-gradient(to bottom,
+      #FDFDFB 0, #FDFDFB var(--page-h),
+      transparent var(--page-h), transparent calc(var(--page-h) + var(--page-gap)));
     color: #1C1C1E;
     border-radius: 2px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));
     padding: 44px 30px;
     font-size: 14px;
     line-height: 1.7;
@@ -2959,6 +2982,8 @@
     /* Dim the page behind the open menu (the tab bar stays bright, so × is easy to find) */
     body.has-tab-bar .fab-menu.active {
       border-radius: 14px;
+      /* the same dim fills the gaps between the buttons, so the page doesn't show through there */
+      background: rgba(5, 3, 10, 0.6);
       box-shadow: 0 0 0 200vmax rgba(5, 3, 10, 0.6);
     }
 
@@ -3755,7 +3780,7 @@
       <input type="file" id="accountAvatarInput" accept="image/*" hidden aria-label="Choose profile picture">
       <div>
         <div class="account-avatar-change">Tap to change photo</div>
-        <div class="founder-badge" id="accountFounderBadge" hidden>👑 Founder</div>
+        <div class="account-badges" id="accountBadges" hidden></div>
         <div class="account-status" id="accountStatusText">Not signed in</div>
         <div class="account-status" id="accountSyncStatus" hidden></div>
         <div class="account-status app-version-label" id="accountVersion"></div>
@@ -3885,10 +3910,16 @@
   // ---------- Version, what's new, bug reports ----------
   // Keep APP_VERSION in step with "version" in package.json. The desktop app reports its real
   // version itself; this is what the web/phone version shows.
-  const APP_VERSION = '1.0.6';
+  const APP_VERSION = '1.0.7';
   const REPORT_URL = 'https://creativeflow-ai.netlify.app/api/report';
   // Newest first. Add an entry for every release; only the newest is shown on the Updates & help page.
   const CHANGELOG = [
+    { version: '1.0.7', date: '2026-09-30', changes: [
+      'Scripts are now laid out on real A4 pages, like Google Docs: when a page fills up, your writing continues on the next page.',
+      'The script editor shows how many pages your script is, and the toolbar stays in place while you scroll.',
+      'Fixed: the + menu no longer shows the page through the gaps between its buttons.',
+      'Tidied the spacing in the New Project window.'
+    ] },
     { version: '1.0.6', date: '2026-09-29', changes: [
       'New: choose Short-form or Long-form when you create a project or plan a video.',
       'Short-form (Shorts, TikTok, Reels) skips thumbnails: the planner focuses on your hooks and titles — star your favourite title and it becomes the video’s title.',
@@ -4142,9 +4173,50 @@
     return isFounder() ? Infinity : levelFromXp(state.profile.xp || 0);
   }
 
+  // Badges on the account. Each one only counts for verified addresses. To use a finished badge
+  // design, put the image in src/icons/badges/ and set its "image" (e.g. 'icons/badges/og.png').
+  // Add beta testers to the OG list by email.
+  const BADGES = [
+    { key: 'founder', label: '👑 Founder', className: 'founder-badge', image: null, emails: [FOUNDER_EMAIL] },
+    { key: 'og', label: 'OG', className: 'og-badge', image: null, emails: ['richmalone11@gmail.com'] }
+  ];
+
+  function verifiedEmails() {
+    let user = null;
+    try { user = clerk && clerk.user; } catch (e) { return []; }
+    if (!user) return [];
+    return (user.emailAddresses || [])
+      .filter(e => e && typeof e.emailAddress === 'string' && e.verification && e.verification.status === 'verified')
+      .map(e => e.emailAddress.toLowerCase());
+  }
+
+  // The badges the signed-in member has (by key), for the account panel and later the leaderboard.
+  function memberBadges() {
+    const mine = verifiedEmails();
+    return BADGES.filter(b => b.emails.some(e => mine.includes(e.toLowerCase())));
+  }
+
   function renderFounderBadge() {
-    const badge = document.getElementById('accountFounderBadge');
-    if (badge) badge.hidden = !isFounder();
+    const wrap = document.getElementById('accountBadges');
+    if (!wrap) return;
+    const badges = memberBadges();
+    wrap.hidden = !badges.length;
+    wrap.innerHTML = '';
+    badges.forEach(b => {
+      let el;
+      if (b.image) {
+        el = document.createElement('img');
+        el.className = 'badge-img';
+        el.src = b.image;
+        el.alt = b.label.replace(/^W+/, '') + ' badge';
+      } else {
+        el = document.createElement('span');
+        el.className = b.className;
+        el.textContent = b.label;
+      }
+      el.title = b.key === 'og' ? 'OG: one of the first CreativeFlow members' : 'Founder of CreativeFlow';
+      wrap.appendChild(el);
+    });
   }
 
   function levelFromXp(xp) {
@@ -5608,8 +5680,73 @@
     updateScriptMeta(p);
     renderWriteHooks(p);
     switchScreen('write');
+    paginateScript();
+    updateScriptMeta(p);
     setTimeout(() => scriptBoxFull.focus(), 80);
   }
+
+  // ---------- A4 pages ----------
+  // The editor is one element drawn as A4 sheets. After each change, any line that would run past
+  // the bottom margin of a sheet is pushed (with a temporary top margin, marked data-pb) to the
+  // top of the next sheet. Those margins are layout only and are stripped before saving.
+  const PAGE_GAP = 18;
+  let scriptPageCount = 1;
+
+  function paginateScript() {
+    const el = scriptBoxFull;
+    const width = el.clientWidth;
+    if (!width) return; // not on screen
+    const pageH = Math.round(width * 297 / 210);
+    const step = pageH + PAGE_GAP;
+    const padTop = parseFloat(getComputedStyle(el).paddingTop) || 0;
+    const padBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0;
+    el.style.setProperty('--page-h', pageH + 'px');
+    el.style.setProperty('--page-gap', PAGE_GAP + 'px');
+
+    el.querySelectorAll('[data-pb]').forEach(b => {
+      b.style.marginTop = '';
+      b.removeAttribute('data-pb');
+      if (!b.getAttribute('style')) b.removeAttribute('style');
+    });
+
+    let lastBottom = 0;
+    for (const b of el.children) {
+      const top = b.offsetTop;
+      const h = b.offsetHeight;
+      const page = Math.floor(top / step);
+      const contentBottom = page * step + pageH - padBottom;
+      // Move it to the next sheet if it crosses the bottom margin (a block taller than a whole
+      // sheet can't be split, so it's left to run over).
+      if (top + h > contentBottom && h <= pageH - padTop - padBottom) {
+        const target = (page + 1) * step + padTop;
+        const current = parseFloat(getComputedStyle(b).marginTop) || 0;
+        b.style.marginTop = (current + target - top) + 'px';
+        b.setAttribute('data-pb', '');
+        // Margins between paragraphs overlap, so check where it landed and correct once.
+        const off = target - b.offsetTop;
+        if (off) b.style.marginTop = (parseFloat(b.style.marginTop) + off) + 'px';
+      }
+      lastBottom = Math.max(lastBottom, b.offsetTop + b.offsetHeight);
+    }
+    scriptPageCount = Math.max(1, Math.ceil((lastBottom + padBottom) / step));
+    el.style.height = (scriptPageCount * step - PAGE_GAP) + 'px';
+  }
+
+  // The script's HTML without the page-layout margins.
+  function cleanScriptHtml() {
+    if (!scriptBoxFull.querySelector('[data-pb]')) return scriptBoxFull.innerHTML;
+    const copy = scriptBoxFull.cloneNode(true);
+    copy.querySelectorAll('[data-pb]').forEach(b => {
+      b.style.marginTop = '';
+      b.removeAttribute('data-pb');
+      if (!b.getAttribute('style')) b.removeAttribute('style');
+    });
+    return copy.innerHTML;
+  }
+
+  window.addEventListener('resize', () => {
+    if (document.getElementById('screen-write').classList.contains('active')) paginateScript();
+  });
 
   scriptOpenBtn.addEventListener('click', () => {
     const p = findProject(currentProjectId);
@@ -5631,7 +5768,8 @@
     const p = findProject(currentProjectId);
     if (!p) return;
     ensureScriptParagraph();
-    p.script = scriptBoxFull.innerHTML;
+    paginateScript();
+    p.script = cleanScriptHtml();
     updateScriptMeta(p);
     renderProjectHeader(p);
     clearTimeout(scriptSaveTimer);
@@ -5761,7 +5899,7 @@
 
     document.getElementById('wordCount').textContent = wordLabel;
     document.getElementById('timeEstimate').textContent = timeLabel;
-    document.getElementById('writeMeta').textContent = `${wordLabel} · ${timeLabel}`;
+    document.getElementById('writeMeta').textContent = `${wordLabel} · ${timeLabel} · ${scriptPageCount} page${scriptPageCount === 1 ? '' : 's'}`;
 
     const progress = computeProgress(p);
     const writeBar = document.getElementById('writeProgressBar');
