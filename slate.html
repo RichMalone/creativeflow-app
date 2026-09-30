@@ -639,6 +639,42 @@
   }
   .badge-art img { height: 20px; width: auto; display: block; }
 
+  /* ---------- Daily task proof ---------- */
+  .task-proof-hint { font-size: 11.5px; color: var(--text-muted); margin-left: 8px; }
+  #taskProofBody { display: grid; gap: 8px; max-height: 46vh; overflow-y: auto; padding: 2px; }
+  #taskProofBody .onboard-input { width: 100%; }
+  #taskProofBody textarea.onboard-input { min-height: 96px; resize: vertical; font-family: var(--font-body); }
+  .task-proof-row { display: flex; align-items: center; gap: 8px; }
+  .task-proof-row .n { width: 20px; text-align: right; font-size: 12.5px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+  .task-proof-status { font-size: 12.5px; color: var(--text-muted); margin: 10px 0 2px; min-height: 18px; }
+  .task-proof-status.ok { color: #6FD3A0; }
+  .task-proof-check { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font-size: 13.5px; line-height: 1.5; }
+
+  /* ---------- Leaderboard ---------- */
+  .lb-tabs { display: flex; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
+  .lb-tab { flex: 1; padding: 9px 0; border-radius: 9px; border: none; background: transparent; color: var(--text-muted); font-family: var(--font-body); font-size: 14px; font-weight: 700; cursor: pointer; }
+  .lb-tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+  .lb-you { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; border: 1.5px solid var(--accent); background: rgba(var(--accent-rgb), 0.12); margin-bottom: 14px; }
+  .lb-you-rank { font-size: 26px; font-weight: 800; min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; }
+  .lb-you-text { flex: 1; min-width: 0; }
+  .lb-you-title { font-weight: 800; font-size: 15px; }
+  .lb-you-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .lb-list { display: grid; gap: 6px; }
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+  .lb-row.you { border-color: var(--accent); }
+  .lb-rank { width: 30px; text-align: center; font-weight: 800; font-size: 15px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .lb-rank.r1 { color: #F5C542; } .lb-rank.r2 { color: #C9CED6; } .lb-rank.r3 { color: #D9955B; }
+  .lb-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); color: var(--text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+  .lb-name { flex: 1; min-width: 0; }
+  .lb-name-line { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14.5px; min-width: 0; }
+  .lb-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-level { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .lb-score { text-align: right; flex-shrink: 0; }
+  .lb-score-num { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .lb-score-label { font-size: 11px; color: var(--text-muted); }
+  .lb-badge-crown { font-size: 13px; }
+  .lb-badge-img { height: 14px; width: auto; display: block; }
+
   /* ---------- Customize (Settings) ---------- */
   .brand-name {
     font-family: var(--font-display);
@@ -2757,6 +2793,7 @@
   #screen-project.active,
   #screen-write.active,
   #screen-planner.active,
+  #screen-leaderboard.active,
   #screen-ideabank.active,
   #screen-analytics.active,
   #screen-dayplanner.active,
@@ -3121,6 +3158,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>Ask Adonis</span>
           </button>
+          <button type="button" class="burger-menu-item" id="burgerLeaderboardBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+            <span>Leaderboard</span>
+          </button>
           <button type="button" class="burger-menu-item" id="accountBtn">
             <span class="burger-menu-avatar">
               <img id="accountBtnAvatar" src="" alt="" style="display:none;">
@@ -3366,6 +3407,28 @@
     <input type="file" id="plannerThumbInput" accept="image/*" multiple hidden>
   </section>
 
+  <!-- LEADERBOARD -->
+  <section class="screen" id="screen-leaderboard">
+    <div class="back-row">
+      <button class="back-btn" id="leaderboardBackBtn" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="project-title-row">
+        <div class="project-title">Leaderboard</div>
+        <div class="project-sub" id="lbSub">Earn XP by capturing ideas, finishing daily tasks and planning videos.</div>
+      </div>
+    </div>
+    <div class="settings-body">
+      <div class="lb-tabs" role="tablist" aria-label="Leaderboard period">
+        <button type="button" class="lb-tab" role="tab" data-lb="week" id="lbTabWeek">This week</button>
+        <button type="button" class="lb-tab" role="tab" data-lb="all" id="lbTabAll">All time</button>
+      </div>
+      <div id="lbYou"></div>
+      <div class="lb-list" id="lbList"><div class="empty-tab">Loading…</div></div>
+      <div class="onboard-hint" id="lbNote" style="margin-top:14px;"></div>
+    </div>
+  </section>
+
   <!-- FULL-SCREEN ASK AI -->
   <section class="screen" id="screen-ai">
     <div class="back-row">
@@ -3603,6 +3666,15 @@
         </div>
       </div>
 
+      <div class="onboard-field-label" style="margin-top:26px;">Leaderboard</div>
+      <div class="feature-toggle-row">
+        <div class="feature-toggle-text">
+          <div class="feature-toggle-name">Show me on the leaderboard</div>
+          <div class="feature-toggle-desc">Other members see your creator name, level and badges, never your email.</div>
+        </div>
+        <button type="button" class="feature-switch" id="settingsLeaderboardSwitch" aria-label="Show me on the leaderboard"></button>
+      </div>
+
       <div class="onboard-field-label" style="margin-top:26px;">Adonis response style</div>
       <div class="onboard-hint" style="margin-bottom:12px;">Changes how Adonis answers you throughout the app.</div>
       <div class="onboard-options" id="settingsAiStyleOptions">
@@ -3773,6 +3845,21 @@
 
 <div class="app-toast" id="appToast"></div>
 
+<!-- DAILY TASK PROOF SHEET -->
+<div class="sheet-backdrop" id="taskProofBackdrop">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="taskProofTitle">
+    <div class="sheet-handle"></div>
+    <h3 id="taskProofTitle">Finish task</h3>
+    <div class="onboard-hint" id="taskProofText" style="margin-bottom:12px;"></div>
+    <div id="taskProofBody"></div>
+    <div class="task-proof-status" id="taskProofStatus"></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="taskProofCancel" type="button">Cancel</button>
+      <button class="btn-create" id="taskProofDone" type="button" disabled>Finish task</button>
+    </div>
+  </div>
+</div>
+
 <!-- NEW PROJECT SHEET -->
 <div class="sheet-backdrop" id="sheetBackdrop">
   <div class="sheet">
@@ -3935,10 +4022,16 @@
   // ---------- Version, what's new, bug reports ----------
   // Keep APP_VERSION in step with "version" in package.json. The desktop app reports its real
   // version itself; this is what the web/phone version shows.
-  const APP_VERSION = '1.0.9';
+  const APP_VERSION = '1.0.10';
   const REPORT_URL = 'https://creativeflow-ai.netlify.app/api/report';
   // Newest first. Add an entry for every release; only the newest is shown on the Updates & help page.
   const CHANGELOG = [
+    { version: '1.0.10', date: '2026-09-30', changes: [
+      'New: the Leaderboard (☰ menu). See who earned the most XP this week and of all time. It resets every Monday.',
+      'You appear by your creator name, never your email. Hide yourself anytime in Settings.',
+      'Daily tasks now ask you to show your work (your ideas, a short note or a link) for the full 15 XP. Tasks the app can\'t check give 5 XP.',
+      'Ideas you write for a daily task are saved to your Idea Bank.'
+    ] },
     { version: '1.0.9', date: '2026-09-30', changes: [
       'New: a Hooks button in the script toolbar, next to Color. It opens your hooks in a drawer so you can write them and ★ your best one while you script.',
       'Hooks now work in every project, not just videos made with Plan a Video.'
@@ -4068,6 +4161,7 @@
       bio: '',
       socialLinks: { youtube: '', tiktok: '', instagram: '', twitter: '', website: '' },
       enabledFeatures: TOOLS_CONFIG.filter(t => t.defaultOn).map(t => t.key),
+      leaderboardHidden: false,
       customization: defaultCustomization()
     };
   }
@@ -4865,6 +4959,7 @@
     { key: 'calendar', name: 'Content Calendar', desc: '+ menu and bottom bar', selectors: ['#fabCalendarBtn', '#tabBar [data-screen="calendar"]'] },
     { key: 'analytics', name: 'Analytics', desc: 'In the + menu', selectors: ['#fabAnalyticsBtn'] },
     { key: 'tasks', name: 'Daily Tasks', desc: '+ menu and bottom bar', selectors: ['#fabDailyQuestsBtn', '#tabBar [data-screen="dailyquests"]'] },
+    { key: 'leaderboard', name: 'Leaderboard', desc: 'In the ☰ menu', selectors: ['#burgerLeaderboardBtn'] },
     { key: 'adonis', name: 'Adonis (AI)', desc: 'Menu, bottom bar, project tab and planner buttons', selectors: ['#aiHomeBtn', '#tabBar [data-screen="ai"]', '.tab[data-tab="ai"]', '.planner-ai'] }
   ];
   const FAB_FEATURE_KEYS = ['newProject', 'planVideo', 'playlists', 'ideaBank', 'calendar', 'analytics', 'tasks'];
@@ -5096,15 +5191,122 @@
     img.src = url;
   });
 
+  function renderLeaderboardSwitch() {
+    const sw = document.getElementById('settingsLeaderboardSwitch');
+    const shown = !settingsDraft.leaderboardHidden;
+    sw.classList.toggle('on', shown);
+    sw.setAttribute('aria-pressed', String(shown));
+  }
+  document.getElementById('settingsLeaderboardSwitch').addEventListener('click', () => {
+    settingsDraft.leaderboardHidden = !settingsDraft.leaderboardHidden;
+    renderLeaderboardSwitch();
+    markSettingsDirty();
+  });
+
+  // ---------- Leaderboard ----------
+  // Rankings come from the server (members' XP, refreshed as their data syncs); "This week"
+  // resets every Monday (UTC). Only creator names and badges are shown, never emails.
+  const LEADERBOARD_URL = SYNC_URL.replace('/api/sync', '/api/leaderboard');
+  let lbPeriod = 'week';
+  let lbData = null;
+
+  function badgeHtml(keys) {
+    return (keys || []).map(k => {
+      const b = BADGES.find(x => x.key === k);
+      if (!b) return '';
+      if (k === 'founder') return '<span class="lb-badge-crown" title="Founder" aria-label="Founder">👑</span>';
+      if (b.image) return '<img class="lb-badge-img" src="' + b.image + '" alt="' + escapeHtml(b.label) + ' badge" title="' + escapeHtml(b.label) + '">';
+      return '<span class="chip" style="padding:1px 6px;font-size:10px">' + escapeHtml(b.label) + '</span>';
+    }).join('');
+  }
+
+  function renderLeaderboard() {
+    document.querySelectorAll('.lb-tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.lb === lbPeriod)));
+    const list = document.getElementById('lbList');
+    const youBox = document.getElementById('lbYou');
+    const note = document.getElementById('lbNote');
+    if (!lbData) return;
+    if (lbData.error) {
+      youBox.innerHTML = '';
+      list.innerHTML = '<div class="empty-tab">' + escapeHtml(lbData.error) + '</div>';
+      note.textContent = '';
+      return;
+    }
+    const week = lbPeriod === 'week';
+    const rows = week ? lbData.week : lbData.allTime;
+    const you = lbData.you;
+    const endDate = new Date(lbData.weekEnds + 'T00:00:00Z');
+    const daysLeft = Math.max(0, Math.ceil((endDate - Date.now()) / 86400000));
+    document.getElementById('lbSub').textContent = week
+      ? 'Resets ' + (daysLeft <= 1 ? 'tonight (UTC)' : 'in ' + daysLeft + ' days') + ' · ' + lbData.members + ' member' + (lbData.members === 1 ? '' : 's')
+      : 'Total XP since joining · ' + lbData.members + ' member' + (lbData.members === 1 ? '' : 's');
+
+    if (you) {
+      const rank = week ? you.rankWeek : you.rankAllTime;
+      const score = week ? you.weeklyXp : you.xp;
+      youBox.innerHTML = '<div class="lb-you"><div class="lb-you-rank">' + (you.hidden ? '–' : rank ? '#' + rank : '–') + '</div>'
+        + '<div class="lb-you-text"><div class="lb-you-title">' + (you.hidden ? 'You\'re hidden from the leaderboard' : week && !score ? 'Earn XP this week to get on the board' : 'Your rank') + '</div>'
+        + '<div class="lb-you-sub">' + (you.hidden ? 'Turn it on in Settings to appear. ' : '') + 'Level ' + you.level + ' · ' + score.toLocaleString() + ' XP' + (week ? ' this week' : '') + '</div></div></div>';
+    } else {
+      youBox.innerHTML = '';
+    }
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty-tab">' + (week ? 'Nobody has earned XP yet this week. Be the first!' : 'No one on the leaderboard yet.') + '</div>';
+    } else {
+      list.innerHTML = rows.map(r => '<div class="lb-row' + (r.you ? ' you' : '') + '">'
+        + '<div class="lb-rank' + (r.rank <= 3 ? ' r' + r.rank : '') + '">' + r.rank + '</div>'
+        + '<div class="lb-avatar" aria-hidden="true">' + escapeHtml((r.name || '?').charAt(0).toUpperCase()) + '</div>'
+        + '<div class="lb-name"><div class="lb-name-line"><span class="lb-name-text">' + escapeHtml(r.name) + (r.you ? ' (you)' : '') + '</span>' + badgeHtml(r.badges) + '</div>'
+        + '<div class="lb-level">Level ' + r.level + '</div></div>'
+        + '<div class="lb-score"><div class="lb-score-num">' + (week ? r.weeklyXp : r.xp).toLocaleString() + '</div><div class="lb-score-label">XP</div></div>'
+        + '</div>').join('');
+    }
+    note.textContent = 'Earn XP by capturing ideas, finishing your daily tasks and planning videos. Only your creator name, level and badges are shown. You can hide yourself in Settings.';
+  }
+
+  async function loadLeaderboard() {
+    lbData = null;
+    document.getElementById('lbList').innerHTML = '<div class="empty-tab">Loading…</div>';
+    document.getElementById('lbYou').innerHTML = '';
+    let token = null;
+    try { token = clerk && clerk.session ? await clerk.session.getToken() : null; } catch (e) {}
+    if (!token) { lbData = { error: 'Sign in to see the leaderboard.' }; renderLeaderboard(); return; }
+    try {
+      // Upload any unsynced changes first, so your latest XP counts.
+      if (typeof hasUnsyncedChanges === 'function' && hasUnsyncedChanges()) await Promise.race([runSync(), new Promise(r => setTimeout(r, 4000))]);
+      const res = await fetch(LEADERBOARD_URL, { headers: { 'Authorization': 'Bearer ' + token }, signal: AbortSignal.timeout(15000) });
+      if (res.status === 404) lbData = { error: 'The leaderboard is almost ready. It will appear here soon.' };
+      else if (res.status === 401) lbData = { error: 'Sign in to see the leaderboard.' };
+      else if (!res.ok) lbData = { error: "Couldn't load the leaderboard. Try again in a moment." };
+      else lbData = await res.json();
+    } catch (e) {
+      lbData = { error: "Couldn't reach the leaderboard. Check your internet connection and try again." };
+    }
+    renderLeaderboard();
+  }
+
+  function openLeaderboard() {
+    document.getElementById('burgerMenu').classList.remove('active');
+    renderLeaderboard();
+    switchScreen('leaderboard');
+    loadLeaderboard();
+  }
+  document.getElementById('burgerLeaderboardBtn').addEventListener('click', openLeaderboard);
+  document.getElementById('leaderboardBackBtn').addEventListener('click', () => { renderHome(); switchScreen('home'); });
+  document.querySelectorAll('.lb-tab').forEach(t => t.addEventListener('click', () => { lbPeriod = t.dataset.lb; renderLeaderboard(); }));
+
   function openSettingsScreen() {
     settingsDraft = {
       aiResponseStyle: state.profile.aiResponseStyle,
       enabledFeatures: state.profile.enabledFeatures.slice(),
+      leaderboardHidden: state.profile.leaderboardHidden === true,
       customization: JSON.parse(JSON.stringify(normalizeCustomization(state.profile.customization)))
     };
     renderSettingsAiStyle();
     renderSettingsFeatureToggles();
     renderCustomizeSection();
+    renderLeaderboardSwitch();
     document.getElementById('settingsSaveBtn').disabled = true;
     switchScreen('settings');
   }
@@ -5134,6 +5336,7 @@
     state.profile.aiResponseStyle = settingsDraft.aiResponseStyle;
     state.profile.enabledFeatures = settingsDraft.enabledFeatures;
     state.profile.customization = settingsDraft.customization;
+    state.profile.leaderboardHidden = settingsDraft.leaderboardHidden;
     save();
     applyCustomization();
     settingsDraft = null;
@@ -6888,6 +7091,7 @@
     document.getElementById('screen-project').classList.toggle('active', name === 'project');
     document.getElementById('screen-write').classList.toggle('active', name === 'write');
     document.getElementById('screen-planner').classList.toggle('active', name === 'planner');
+    document.getElementById('screen-leaderboard').classList.toggle('active', name === 'leaderboard');
     document.getElementById('screen-ai').classList.toggle('active', name === 'ai');
     document.getElementById('screen-calendar').classList.toggle('active', name === 'calendar');
     document.getElementById('screen-analytics').classList.toggle('active', name === 'analytics');
@@ -7859,7 +8063,8 @@ Give concise, specific, practical feedback grounded in the material above when a
   const DAILY_TASK_COUNT = 3;
   const DAILY_TASK_REST_DAYS = 14;
   const DAILY_TASK_SWAPS_PER_DAY = 1;
-  const DAILY_TASK_XP = 15;
+  const DAILY_TASK_XP = 15;        // tasks finished with proof
+  const DAILY_TASK_SELF_XP = 5;    // tasks the app can't check ("honour system")
   const DAILY_TASKS_BONUS_XP = 25;
 
   const DAILY_TASK_AREAS = {
@@ -7992,6 +8197,88 @@ Give concise, specific, practical feedback grounded in the material above when a
     { id: 'repurpose-faq', area: 'repurpose', mins: 20, text: 'Collect 3 questions you get asked a lot and plan one video that answers them all.' }
   ];
 
+  // How each task is proven. Types:
+  //   list  — type N items (idea lists are saved to the Idea Bank)
+  //   text  — type the one new thing (a title, a hook, a bio)
+  //   note  — a short note of what they found or decided (20+ words)
+  //   link  — a link to what they posted
+  //   app   — checked automatically from what they did in CreativeFlow today
+  //   self  — can't be checked; ticking gives DAILY_TASK_SELF_XP instead of DAILY_TASK_XP
+  const TASK_PROOF_BY_AREA = {
+    ideas: { type: 'note' }, hooks: { type: 'text', label: 'Your new hook' }, titles: { type: 'text', label: 'Your new title' },
+    scripting: { type: 'app', check: 'script' }, filming: { type: 'self' }, editing: { type: 'self' }, thumbnails: { type: 'self' },
+    community: { type: 'self' }, growth: { type: 'note' }, research: { type: 'note' }, planning: { type: 'note' },
+    repurpose: { type: 'link', label: 'Link to what you posted' }
+  };
+  const TASK_PROOF = {
+    'ideas-10-fast': { type: 'list', count: 10, item: 'Idea', saveIdeas: true },
+    'ideas-remix': { type: 'list', count: 3, item: 'Follow-up idea', saveIdeas: true },
+    'ideas-beginner': { type: 'list', count: 3, item: 'Idea', saveIdeas: true },
+    'ideas-myth': { type: 'list', count: 3, item: 'Myth or mistake', saveIdeas: true },
+    'ideas-versus': { type: 'list', count: 2, item: 'This vs that idea', saveIdeas: true },
+    'ideas-series': { type: 'list', count: 3, item: 'Episode title', saveIdeas: true },
+    'ideas-comments': { type: 'text', label: 'The video idea from a comment', saveIdeas: true },
+    'hooks-5-versions': { type: 'list', count: 5, item: 'Opening line' },
+    'hooks-study': { type: 'note' },
+    'hooks-visual': { type: 'note' },
+    'hooks-say-aloud': { type: 'self' },
+    'titles-10': { type: 'list', count: 10, item: 'Title' },
+    'titles-study': { type: 'list', count: 5, item: 'Title you found' },
+    'titles-stream': { type: 'list', count: 3, item: 'Stream title' },
+    'titles-caption': { type: 'text', label: 'Your caption' },
+    'titles-keyword': { type: 'note' },
+    'script-outline': { type: 'list', count: 5, item: 'Beat' },
+    'script-stream-segments': { type: 'list', count: 3, item: 'Segment' },
+    'edit-vod': { type: 'list', count: 3, item: 'Moment (timestamp + what happens)' },
+    'thumb-3-concepts': { type: 'list', count: 3, item: 'Thumbnail concept' },
+    'thumb-study': { type: 'list', count: 5, item: 'What this thumbnail does' },
+    'community-pin': { type: 'link', label: 'Link to the post with your pinned comment' },
+    'community-question': { type: 'link', label: 'Link to your question or poll' },
+    'community-behind': { type: 'link', label: 'Link to your behind-the-scenes post' },
+    'community-collab': { type: 'list', count: 3, item: 'Creator + collab idea' },
+    'growth-bio': { type: 'text', label: 'Your new bio' },
+    'growth-playlist': { type: 'self' },
+    'growth-end-screen': { type: 'self' },
+    'growth-stream-schedule': { type: 'link', label: 'Link to where you posted your schedule' },
+    'research-questions': { type: 'list', count: 5, item: 'Question people ask' },
+    'research-search': { type: 'list', count: 3, item: 'Search suggestion' },
+    'research-outliers': { type: 'list', count: 3, item: 'Video + why it did well' },
+    'research-trends': { type: 'list', count: 3, item: 'Format you saved' },
+    'plan-week': { type: 'app', check: 'calendar' },
+    'plan-next-3': { type: 'list', count: 3, item: 'Video' },
+    'plan-goal': { type: 'text', label: 'Your goal for this month' },
+    'plan-checklist': { type: 'list', count: 5, item: 'Checklist step' },
+    'plan-block': { type: 'self' },
+    'plan-bank': { type: 'self' },
+    'repurpose-old': { type: 'note' },
+    'repurpose-faq': { type: 'list', count: 3, item: 'Question' }
+  };
+  function taskProof(task) {
+    return TASK_PROOF[task.id] || TASK_PROOF_BY_AREA[task.area] || { type: 'self' };
+  }
+  function taskXp(task) {
+    return taskProof(task).type === 'self' ? DAILY_TASK_SELF_XP : DAILY_TASK_XP;
+  }
+  const wordCount = (s) => String(s || '').trim().split(/\s+/).filter(Boolean).length;
+  function validLink(s) {
+    try { const u = new URL(String(s).trim()); return /^https?:$/.test(u.protocol) && u.hostname.includes('.'); } catch (e) { return false; }
+  }
+  // For "app" tasks: did they do it in CreativeFlow today?
+  function appCheckPasses(check) {
+    const today = todayKey();
+    if (check === 'script') return ((state.usageDaily[today] || {}).scriptEdits || 0) > 0;
+    if (check === 'calendar') {
+      const end = new Date(); end.setDate(end.getDate() + 7);
+      const endKey = end.getFullYear() + '-' + String(end.getMonth() + 1).padStart(2, '0') + '-' + String(end.getDate()).padStart(2, '0');
+      return state.projects.some(p => p.scheduledDate && p.scheduledDate >= today && p.scheduledDate <= endKey);
+    }
+    return false;
+  }
+  const APP_CHECK_COPY = {
+    script: { ok: 'You edited a script in CreativeFlow today.', todo: 'Edit your script in CreativeFlow (open a project → Script), then come back and finish this task.' },
+    calendar: { ok: 'You have a post scheduled in the content calendar this week.', todo: 'Schedule at least one project in the content calendar for the next 7 days, then come back and finish this task.' }
+  };
+
   function creatorPlatformTags() {
     const types = new Set([...(state.profile.creatorTypes || []), state.profile.mainPlatform].filter(Boolean));
     const tags = new Set();
@@ -8091,18 +8378,32 @@ Give concise, specific, practical feedback grounded in the material above when a
   let justCompletedTaskId = null; // gets a little "done" animation on the next render
 
   function toggleDailyTask(id) {
-    const planner = getPlannerForDate(todayKey());
     const ct = getTodaysTasks();
     if (ct.done.includes(id)) {
       ct.done = ct.done.filter(x => x !== id);
-    } else {
+      save();
+      renderDailyTasks();
+      return;
+    }
+    openTaskProof(id);
+  }
+
+  // Marks a task done once its proof is in. XP is given once per task per day.
+  function completeDailyTask(id, proof) {
+    const planner = getPlannerForDate(todayKey());
+    const ct = getTodaysTasks();
+    const task = findDailyTask(id);
+    if (!ct.proofs) ct.proofs = {};
+    ct.proofs[id] = proof;
+    if (!ct.done.includes(id)) {
       ct.done.push(id);
       justCompletedTaskId = id;
       const awardKey = 'task:' + id;
       if (!planner.challengesAwarded.includes(awardKey)) {
         planner.challengesAwarded.push(awardKey);
-        awardXp(DAILY_TASK_XP);
-        showToast(`Task done! +${DAILY_TASK_XP} XP`);
+        const xp = taskXp(task);
+        awardXp(xp);
+        showToast(`Task done! +${xp} XP`);
       }
       if (dayTasksComplete(ct) && !planner.challengesAwarded.includes('tasks-bonus')) {
         planner.challengesAwarded.push('tasks-bonus');
@@ -8113,6 +8414,131 @@ Give concise, specific, practical feedback grounded in the material above when a
     save();
     renderDailyTasks();
   }
+
+  // ---------- "Show your work" sheet ----------
+  let proofTaskId = null;
+  let proofRead = () => null; // returns the proof object when it's complete, else null
+  const proofBackdrop = document.getElementById('taskProofBackdrop');
+
+  function openTaskProof(id) {
+    const task = findDailyTask(id);
+    if (!task) return;
+    const spec = taskProof(task);
+    const xp = taskXp(task);
+    proofTaskId = id;
+    document.getElementById('taskProofText').textContent = task.text;
+    const body = document.getElementById('taskProofBody');
+    const status = document.getElementById('taskProofStatus');
+    const doneBtn = document.getElementById('taskProofDone');
+    body.innerHTML = '';
+    doneBtn.textContent = spec.type === 'self' ? 'I did it · +' + xp + ' XP' : 'Finish task · +' + xp + ' XP';
+    const field = (tag, placeholder, maxLength) => {
+      const el = document.createElement(tag);
+      el.className = 'onboard-input';
+      el.placeholder = placeholder;
+      if (tag === 'input') el.type = 'text';
+      el.maxLength = maxLength;
+      el.autocomplete = 'off';
+      return el;
+    };
+    let update;
+
+    if (spec.type === 'list') {
+      const inputs = [];
+      for (let i = 0; i < spec.count; i++) {
+        const row = document.createElement('div');
+        row.className = 'task-proof-row';
+        row.innerHTML = '<span class="n">' + (i + 1) + '</span>';
+        const inp = field('input', spec.item + ' ' + (i + 1), 200);
+        inp.setAttribute('aria-label', spec.item + ' ' + (i + 1));
+        row.appendChild(inp);
+        body.appendChild(row);
+        inputs.push(inp);
+      }
+      proofRead = () => {
+        const items = inputs.map(i => i.value.trim()).filter(v => v.length >= 3);
+        return items.length >= spec.count ? { type: 'list', items } : null;
+      };
+      update = () => {
+        const n = inputs.filter(i => i.value.trim().length >= 3).length;
+        status.textContent = n + ' of ' + spec.count + ' written' + (spec.saveIdeas ? ' · they\'ll be saved to your Idea Bank' : '');
+      };
+    } else if (spec.type === 'text') {
+      const inp = field('input', spec.label || 'Type it here', 300);
+      inp.setAttribute('aria-label', spec.label || 'Your answer');
+      body.appendChild(inp);
+      proofRead = () => wordCount(inp.value) >= 3 ? { type: 'text', text: inp.value.trim() } : null;
+      update = () => { status.textContent = wordCount(inp.value) >= 3 ? 'Looks good.' : 'Type what you came up with (a few words at least).'; };
+    } else if (spec.type === 'note') {
+      const ta = field('textarea', 'What did you find, decide or come up with?', 1500);
+      ta.setAttribute('aria-label', 'Your note');
+      body.appendChild(ta);
+      proofRead = () => wordCount(ta.value) >= 20 ? { type: 'note', text: ta.value.trim() } : null;
+      update = () => {
+        const w = wordCount(ta.value);
+        status.textContent = w >= 20 ? w + ' words · looks good.' : w + ' of 20 words';
+      };
+    } else if (spec.type === 'link') {
+      const inp = field('input', 'https://…', 500);
+      inp.type = 'url';
+      inp.setAttribute('aria-label', spec.label || 'Link');
+      const lbl = document.createElement('div');
+      lbl.className = 'onboard-hint';
+      lbl.style.margin = '0';
+      lbl.textContent = spec.label || 'Link to what you posted';
+      body.append(lbl, inp);
+      proofRead = () => validLink(inp.value) ? { type: 'link', url: inp.value.trim() } : null;
+      update = () => { status.textContent = !inp.value.trim() ? 'Paste the link (copy it from the app or site you posted on).' : validLink(inp.value) ? 'Link added.' : 'That doesn\'t look like a link yet. It should start with https://'; };
+    } else if (spec.type === 'app') {
+      const box = document.createElement('div');
+      box.className = 'task-proof-check';
+      const ok = appCheckPasses(spec.check);
+      box.textContent = (ok ? '✓ ' : '') + (ok ? APP_CHECK_COPY[spec.check].ok : APP_CHECK_COPY[spec.check].todo);
+      body.appendChild(box);
+      proofRead = () => appCheckPasses(spec.check) ? { type: 'app', check: spec.check } : null;
+      update = () => { status.textContent = ok ? 'Checked. You can finish this task.' : ''; };
+    } else {
+      const box = document.createElement('div');
+      box.className = 'task-proof-check';
+      box.textContent = 'CreativeFlow can\'t check this one, so it\'s on the honour system and gives ' + DAILY_TASK_SELF_XP + ' XP instead of ' + DAILY_TASK_XP + '.';
+      body.appendChild(box);
+      proofRead = () => ({ type: 'self' });
+      update = () => { status.textContent = ''; };
+    }
+
+    const refresh = () => {
+      update();
+      const ready = !!proofRead();
+      doneBtn.disabled = !ready;
+      status.classList.toggle('ok', ready && spec.type !== 'self');
+    };
+    body.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', refresh));
+    refresh();
+    proofBackdrop.classList.add('active');
+    const first = body.querySelector('input, textarea');
+    if (first) setTimeout(() => first.focus(), 80);
+  }
+
+  function closeTaskProof() {
+    proofBackdrop.classList.remove('active');
+    proofTaskId = null;
+  }
+  document.getElementById('taskProofCancel').addEventListener('click', closeTaskProof);
+  proofBackdrop.addEventListener('click', (e) => { if (e.target === proofBackdrop) closeTaskProof(); });
+  document.getElementById('taskProofDone').addEventListener('click', () => {
+    const id = proofTaskId;
+    const proof = proofRead();
+    if (!id || !proof) return;
+    const task = findDailyTask(id);
+    const spec = taskProof(task);
+    // Idea tasks feed the Idea Bank, so the work isn't lost (no extra idea XP: the task gives it).
+    if (spec.saveIdeas) {
+      const items = proof.type === 'list' ? proof.items : [proof.text];
+      items.forEach(text => state.inbox.push({ id: uid(), text, createdAt: Date.now() }));
+    }
+    closeTaskProof();
+    completeDailyTask(id, proof);
+  });
 
   function swapDailyTask(id) {
     const ct = getTodaysTasks();
@@ -8146,7 +8572,8 @@ Give concise, specific, practical feedback grounded in the material above when a
           <div class="task-area">${escapeHtml(area.label)} · ~${task.mins} min</div>
           <div class="quest-label">${escapeHtml(task.text)}</div>
           <div class="task-footer">
-            <span class="quest-xp">+${DAILY_TASK_XP} XP</span>
+            <span class="quest-xp">+${taskXp(task)} XP</span>
+            <span class="task-proof-hint">${{ list: 'Show your work', text: 'Show your work', note: 'Show your work', link: 'Link needed', app: 'Checked in the app', self: 'Honour system' }[taskProof(task).type]}</span>
             ${!isDone && swapsLeft > 0 ? '<button type="button" class="task-swap-btn">Swap task</button>' : ''}
           </div>
         </div>
