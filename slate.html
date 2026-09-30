@@ -884,24 +884,30 @@
     text-align: left;
     cursor: pointer;
   }
-  /* Hooks, shown above the script for videos made in the planner */
+  /* Hooks drawer, opened from the Hooks button in the script toolbar */
+  .doc-hooks-btn { font-family: var(--font-body); }
+  .doc-hooks-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+  .doc-hooks-count {
+    min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 11px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .doc-hooks-count:empty { display: none; }
   .write-hooks {
-    width: 100%;
-    max-width: 620px;
-    margin: 0 0 16px;
+    margin: 8px 16px 0;
+    max-height: 42vh;
+    overflow-y: auto;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid var(--accent);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 12px 14px 14px;
+    flex-shrink: 0;
   }
-  .write-hooks > summary {
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 14px;
-    list-style-position: inside;
-  }
-  .write-hooks[open] > summary { margin-bottom: 10px; }
-  .write-hooks-count { font-weight: 500; color: var(--text-muted); font-size: 12.5px; margin-left: 6px; }
+  .write-hooks-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
+  .write-hooks-title { font-weight: 800; font-size: 14px; }
+  .write-hooks-hint { font-size: 12.5px; color: var(--text-muted); }
 
   .feature-toggle-row {
     display: flex;
@@ -3320,13 +3326,22 @@
         <input type="color" id="textColorPicker" class="doc-color-input" value="#1C1C1E" aria-label="Text color">
         <span class="doc-color-swatch" id="textColorSwatch" style="background:#1C1C1E;"></span>
       </label>
+      <button type="button" class="doc-color-label doc-hooks-btn" id="hooksToolBtn" aria-expanded="false" aria-controls="writeHooksPanel" title="Your hooks">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v10a4 4 0 0 0 8 0"/><circle cx="8" cy="3" r="1.6" fill="currentColor" stroke="none"/></svg>
+        <span class="doc-color-text">Hooks</span>
+        <span class="doc-hooks-count" id="writeHooksCount"></span>
+      </button>
+    </div>
+
+    <div class="write-hooks" id="writeHooksPanel" hidden>
+      <div class="write-hooks-head">
+        <span class="write-hooks-title">Hooks</span>
+        <span class="write-hooks-hint">Write 5 or more ways to open the video, and ★ the strongest.</span>
+      </div>
+      <div id="writeHooksList"></div>
     </div>
 
     <div class="doc-canvas">
-      <details class="write-hooks" id="writeHooksPanel" open hidden>
-        <summary>Hooks<span class="write-hooks-count" id="writeHooksCount"></span></summary>
-        <div id="writeHooksList"></div>
-      </details>
       <div class="doc-page" id="scriptBoxFull" contenteditable="true" spellcheck="true" aria-label="Script editor, full screen" data-placeholder="Write your script here..."></div>
     </div>
   </section>
@@ -3920,10 +3935,14 @@
   // ---------- Version, what's new, bug reports ----------
   // Keep APP_VERSION in step with "version" in package.json. The desktop app reports its real
   // version itself; this is what the web/phone version shows.
-  const APP_VERSION = '1.0.8';
+  const APP_VERSION = '1.0.9';
   const REPORT_URL = 'https://creativeflow-ai.netlify.app/api/report';
   // Newest first. Add an entry for every release; only the newest is shown on the Updates & help page.
   const CHANGELOG = [
+    { version: '1.0.9', date: '2026-09-30', changes: [
+      'New: a Hooks button in the script toolbar, next to Color. It opens your hooks in a drawer so you can write them and ★ your best one while you script.',
+      'Hooks now work in every project, not just videos made with Plan a Video.'
+    ] },
     { version: '1.0.8', date: '2026-09-30', changes: [
       'New: badges on your account, starting with the OG badge for CreativeFlow’s first members.'
     ] },
@@ -4121,6 +4140,7 @@
       if (p.format !== 'short') p.format = 'long'; // older projects are long-form
       if (p.plan !== undefined && (!p.plan || typeof p.plan !== 'object' || Array.isArray(p.plan))) delete p.plan;
       if (p.plan) normalizePlan(p.plan);
+      if (p.scriptHooks && (typeof p.scriptHooks !== 'object' || !Array.isArray(p.scriptHooks.hooks))) delete p.scriptHooks;
     });
     return s;
   }
@@ -6268,7 +6288,7 @@
   }
 
   function renderHookEditor(container, p, onChange) {
-    const plan = p.plan;
+    const plan = hookHolder(p);
     container.innerHTML = '';
     plan.hooks.forEach((h, i) => {
       const row = document.createElement('div');
@@ -6309,19 +6329,48 @@
     }));
   }
 
-  // The hooks box above the script, for videos made in the planner.
+  // Where a project keeps its hooks: in its plan for videos made in the planner, otherwise in
+  // scriptHooks (added the first time the Hooks drawer is used).
+  function hookHolder(p) {
+    if (p.plan) return p.plan;
+    if (!p.scriptHooks) p.scriptHooks = { hooks: [], bestHookId: null };
+    while (p.scriptHooks.hooks.length < PLANNER_MIN_HOOKS) p.scriptHooks.hooks.push({ id: uid(), text: '' });
+    return p.scriptHooks;
+  }
+
+  // The Hooks drawer, opened from the Hooks button in the script toolbar.
+  let writeHooksOpen = false;
   function renderWriteHooks(p) {
+    const holder = hookHolder(p);
+    const btn = document.getElementById('hooksToolBtn');
     const panel = document.getElementById('writeHooksPanel');
-    panel.hidden = !p.plan;
-    if (!p.plan) return;
-    normalizePlan(p.plan);
+    panel.hidden = !writeHooksOpen;
+    btn.setAttribute('aria-expanded', String(writeHooksOpen));
     const updateCount = () => {
-      const n = p.plan.hooks.filter(h => h.text.trim()).length;
-      document.getElementById('writeHooksCount').textContent = `${n} written${p.plan.bestHookId ? ' · ★ best picked' : ''}`;
+      const n = holder.hooks.filter(x => x.text.trim()).length;
+      document.getElementById('writeHooksCount').textContent = n ? String(n) : '';
+      btn.title = n ? `${n} hook${n === 1 ? '' : 's'} written${holder.bestHookId ? ', best one starred' : ''}` : 'Your hooks';
     };
     renderHookEditor(document.getElementById('writeHooksList'), p, updateCount);
     updateCount();
   }
+  document.getElementById('hooksToolBtn').addEventListener('click', () => {
+    const p = findProject(currentProjectId);
+    if (!p) return;
+    writeHooksOpen = !writeHooksOpen;
+    renderWriteHooks(p);
+    if (writeHooksOpen) {
+      const first = [...document.querySelectorAll('#writeHooksList input')].find(i => !i.value);
+      if (first) first.focus();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && writeHooksOpen && document.getElementById('screen-write').classList.contains('active')) {
+      writeHooksOpen = false;
+      const p = findProject(currentProjectId);
+      if (p) renderWriteHooks(p);
+    }
+  });
 
   // Step 4: five titles, typed or suggested by Adonis.
   function renderPlannerTitles(body, p) {
@@ -7238,9 +7287,10 @@
     const ideasText = p.ideas.length ? p.ideas.map(i => '- ' + i.text).join('\n') : '(none yet)';
     const scriptText = scriptPlainText(p.script);
     const scriptExcerpt = scriptText ? scriptText.slice(0, 6000) : '(no script written yet)';
-    const planHooks = p.plan ? p.plan.hooks.filter(h => h.text.trim()) : [];
+    const holder = p.plan || p.scriptHooks;
+    const planHooks = holder ? holder.hooks.filter(h => h.text.trim()) : [];
     const hooksText = planHooks.length
-      ? `\nHooks they've written${p.plan.bestHookId ? ' (★ = their favourite)' : ''}:\n${planHooks.map(h => (h.id === p.plan.bestHookId ? '★ ' : '- ') + h.text.trim()).join('\n')}\n`
+      ? `\nHooks they've written${holder.bestHookId ? ' (★ = their favourite)' : ''}:\n${planHooks.map(h => (h.id === holder.bestHookId ? '★ ' : '- ') + h.text.trim()).join('\n')}\n`
       : '';
     return persona + profileContext + `You are a helpful assistant inside CreativeFlow, a planning app for content creators. The person is working on a video project called "${displayTitle}". Here is what they have so far.
 
