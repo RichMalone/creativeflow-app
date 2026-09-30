@@ -627,7 +627,17 @@
     color: #34D5C7;
     font-size: 12px; font-weight: 900; letter-spacing: 1px;
   }
-  .badge-img { height: 24px; width: auto; margin: 4px 0 2px; }
+  /* A badge design shown on a pill in its own colours (the OG art is red with a black outline). */
+  .badge-art {
+    display: inline-flex; align-items: center;
+    margin: 4px 0 2px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #2A0609 0%, #0F0204 100%);
+    border: 1px solid rgba(255, 64, 64, 0.55);
+    box-shadow: 0 0 12px rgba(255, 40, 40, 0.28);
+  }
+  .badge-art img { height: 20px; width: auto; display: block; }
 
   /* ---------- Customize (Settings) ---------- */
   .brand-name {
@@ -3910,10 +3920,13 @@
   // ---------- Version, what's new, bug reports ----------
   // Keep APP_VERSION in step with "version" in package.json. The desktop app reports its real
   // version itself; this is what the web/phone version shows.
-  const APP_VERSION = '1.0.7';
+  const APP_VERSION = '1.0.8';
   const REPORT_URL = 'https://creativeflow-ai.netlify.app/api/report';
   // Newest first. Add an entry for every release; only the newest is shown on the Updates & help page.
   const CHANGELOG = [
+    { version: '1.0.8', date: '2026-09-30', changes: [
+      'New: badges on your account, starting with the OG badge for CreativeFlow’s first members.'
+    ] },
     { version: '1.0.7', date: '2026-09-30', changes: [
       'Scripts are now laid out on real A4 pages, like Google Docs: when a page fills up, your writing continues on the next page.',
       'The script editor shows how many pages your script is, and the toolbar stays in place while you scroll.',
@@ -4178,7 +4191,7 @@
   // Add beta testers to the OG list by email.
   const BADGES = [
     { key: 'founder', label: '👑 Founder', className: 'founder-badge', image: null, emails: [FOUNDER_EMAIL] },
-    { key: 'og', label: 'OG', className: 'og-badge', image: null, emails: ['richmalone11@gmail.com'] }
+    { key: 'og', label: 'OG', className: 'og-badge', image: 'icons/badges/og.png', emails: ['richmalone11@gmail.com'] }
   ];
 
   function verifiedEmails() {
@@ -4205,10 +4218,12 @@
     badges.forEach(b => {
       let el;
       if (b.image) {
-        el = document.createElement('img');
-        el.className = 'badge-img';
-        el.src = b.image;
-        el.alt = b.label.replace(/^W+/, '') + ' badge';
+        el = document.createElement('span');
+        el.className = 'badge-art';
+        const img = document.createElement('img');
+        img.src = b.image;
+        img.alt = b.label.replace(/^W+/, '') + ' badge';
+        el.appendChild(img);
       } else {
         el = document.createElement('span');
         el.className = b.className;
