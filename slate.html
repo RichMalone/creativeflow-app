@@ -8433,7 +8433,10 @@ Give concise, specific, practical feedback grounded in the material above when a
     // the app (served from 127.0.0.1) never gets to send, so sign-up stalled after the first step.
     // Instead, carry it in a header the way Clerk's mobile SDKs do: send the saved client token
     // with every request and keep the new one from each response.
-    const nativeAuth = window.CLERK_PUBLISHABLE_KEY.startsWith('pk_live_');
+    // On creativeflow.media itself (the web/phone version) the cookie is first-party and works,
+    // and Clerk refuses the header there, so only the desktop apps use the header.
+    const onOwnDomain = /(^|\.)creativeflow\.media$/.test(location.hostname);
+    const nativeAuth = window.CLERK_PUBLISHABLE_KEY.startsWith('pk_live_') && !onOwnDomain;
     if (nativeAuth) {
       const CLIENT_TOKEN_KEY = 'slate.clerkClientToken';
       clerk.__unstable__onBeforeRequest(async (req) => {
